@@ -1,0 +1,36 @@
+while true; do
+
+# Power/Battery Status
+if [ "$( cat /sys/class/power_supply/ACAD/online )" -eq "1" ]; then
+	if [ -e "/sys/class/power_supply/BAT0" ]; then
+        DWM_BATTERY=$(( `cat /sys/class/power_supply/BAT0/charge_now` * 100 / `cat /sys/class/power_supply/BAT0/charge_full` ))+;
+    else
+    	DWM_BATTERY=AC;
+    fi
+else
+    DWM_BATTERY=$(( `cat /sys/class/power_supply/BAT0/charge_now` * 100 / `cat /sys/class/power_supply/BAT0/charge_full` ));
+    if [ "$DWM_BATTERY" -lt "20" ]; then
+		DWM_BATTERY=$DWM_BATTERY\ :\ Battery\ low 
+	fi
+fi;
+
+ #Wi-Fi eSSID
+ESSID=$( /sbin/iwgetid -r );
+ if [ -n "$ESSID" ]; then
+ 		  DWM_ESSID=" | $ESSID";
+ else
+ 		  DWM_ESSID="";
+ fi;
+
+#Brightness indicator
+DWM_BRIGHTNESS=$(( `cat /sys/class/backlight/intel_backlight/brightness` * 100 / `cat /sys/class/backlight/intel_backlight/max_brightness` ));
+
+# Date and Time
+DWM_CLOCK=$( date '+%a %e/%-m %l:%M %p' );
+
+# Overall output command
+DWM_STATUS="$DWM_BATTERY | $DWM_BRIGHTNESS$DWM_ESSID | $DWM_CLOCK";
+xsetroot -name "$DWM_STATUS";
+sleep 5;
+
+done
